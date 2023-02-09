@@ -4,7 +4,6 @@ A public repo of charting functions that can be used across YF and our web apps 
 
 # Example of how this library can make YF data processing easier:
 
-`
    //generateChart is a required function which will be called to generate your Javascript chart
    generateChart = function(options) {
 
@@ -87,4 +86,3 @@ A public repo of charting functions that can be used across YF and our web apps 
           }
       });
    }
-`
