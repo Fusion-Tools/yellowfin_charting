@@ -1,3 +1,36 @@
+/*******************************Utility Functions*******************************/
+
+/**
+ * Recursively creates a deep clone of given object. Preserves data types like Date
+ * @param {object} objectToBeCloned object to be deep cloned
+ * @returns {object} A clone of the passed object
+ */
+function deepCopy(objectToBeCloned) {
+    let resultObj, value, key;
+
+    if (typeof objectToBeCloned !== "object" || objectToBeCloned === null) {
+        return objectToBeCloned;
+    }
+
+    if (typeof objectToBeCloned === "object") {
+        if (objectToBeCloned.constructor.name !== "Object") {
+            resultObj = new objectToBeCloned.constructor(objectToBeCloned);
+        } else {
+            resultObj = Array.isArray(objectToBeCloned) ? [] : {};
+        }
+    }
+
+    for (key in objectToBeCloned) {
+        value = objectToBeCloned[key];
+
+        // Recursively copy for nested objects & arrays
+        resultObj[key] = deepCopy(value);
+    }
+
+    return resultObj;
+}
+/****************************End Utility Functions****************************/
+
 
 /*****************************Selecting Functions*****************************/
 
@@ -198,8 +231,7 @@ function recodeColumn(data, column, map) {
  * @returns {Array[object]}
  */
 function seperateDataIntoGroups(data, { groupByColumns = [], groupedColumnName = "grouped_column", groupOrder = [] } = {}) {
-    // TODO | WARNING:  dates are not parsed automatically
-    let intermData = JSON.parse(JSON.stringify(data)); // Make a deep copy so that don't modify in-place
+    let intermData = deepCopy(data); // Make a deep copy so that don't modify in-place
     let firstCol = intermData[Object.keys(intermData)[0]];
     // Add a concatenated column based on the seperationColumns
     intermData[groupedColumnName] = firstCol.map(
