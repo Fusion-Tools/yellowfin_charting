@@ -1,131 +1,256 @@
-removeExcessData = function(data, columnFormat, {dateColumns} = { dateColumns: [] }) {
-    // Removes data like unformatted and raw data
-    // Generally should not be called externally, just be used by this library internally
-    // by the getFormattedData() and getUnformattedData() functions
-    newData = {}
-    for (const [metricKey, metricValues] of Object.entries(data)) {
-        newData[metricKey] = [];
+/*******************************Utility Functions*******************************/
 
-        if (columnFormat === "formatted_data") {
-            metricValues.map(dataPoint => { newData[metricKey].push(dataPoint.formatted_data) });
-        } else if (dateColumns.indexOf(metricKey) > -1) {
-            // If Date column then convert to JS date
-            metricValues.map(dataPoint => {
-                newData[metricKey].push(new Date(new Date(dataPoint.raw_data).toLocaleString('en-US', { timeZone: "Europe/London" })))
-            });
+/**
+ * Recursively creates a deep clone of given object. Preserves data types like Date
+ * @param {object} objectToBeCloned object to be deep cloned
+ * @returns {object} A clone of the passed object
+ */
+function deepCopy(objectToBeCloned) {
+    let resultObj, value, key;
+
+    if (typeof objectToBeCloned !== "object" || objectToBeCloned === null) {
+        return objectToBeCloned;
+    }
+
+    if (typeof objectToBeCloned === "object") {
+        if (objectToBeCloned.constructor.name !== "Object") {
+            resultObj = new objectToBeCloned.constructor(objectToBeCloned);
         } else {
-            // If Metric Key in unformatted column list then use raw_data
-            metricValues.map(dataPoint => { newData[metricKey].push(dataPoint.raw_data) });
-        } 
-    }
-    return(newData);
-}
-
-getFormattedData = function(data, {dateColumns} = { dateColumns: [] }) {
-    // Takes the dataset YF provides and returns the formatted version of the data
-    // (Date columns are kept in the formatted version, not converted to Date objects)
-    // This and getUnformattedData() should be the first data processing functions called
-    
-    newData = removeExcessData(data, "formatted_data", { dateColumns: dateColumns });
-    return newData;
-}
-
-getUnformattedData = function(data, {dateColumns} = { dateColumns: [] }) {
-    // Takes the dataset YF provides and returns the formatted version of the data
-    // (Date columns are convered to JS Date objects)
-    // This and getFormattedData() should be the first data processing functions called
-    
-    newData = removeExcessData(data, "raw_data", { dateColumns: dateColumns });
-    return newData;
-}
-
-getQuarterlyData = function(data, unformattedMonthList, {numberOfMonthsInQuarter} = { numberOfMonthsInQuarter: 3 }) {
-    // Takes the output of the getFormattedData() or getUnformattedData() and returns
-    // the quarterly data only. Quarterly months are based off the MAX month
-    //
-    // unformattedMonthList: should be the month column returns by getUnformattedData()
-    
-    var maxDate = new Date(Math.max.apply(null, unformattedMonthList));
-    
-    var maxMonth = maxDate.getMonth()
-    var quarterlyMonthIndexs = unformattedMonthList.map((e, i) => {
-        return((e.getMonth() % numberOfMonthsInQuarter) == (maxMonth % numberOfMonthsInQuarter))
-    })
-    
-    newData = {}
-    for (const [columnName, column] of Object.entries(data)) {
-        newData[columnName] = column.filter((row, rowIndex) => { return(quarterlyMonthIndexs[rowIndex]) })
-    }
-    
-    return(newData)
-}
-
-seperateDataIntoGroups = function(data, {groupByColumns, groupedColumnName, groupOrder} = { groupByColumns: [], groupedColumnName: "grouped_column", groupOrder: [] }) {
-    // Seperates the data into data groups so that they are easier to turn into individual lines/traces
-    //
-    // groupByColumns: Columns that will be used as the "key" for creating the groups
-    //      ie. if you use month here each group will be a different month
-    // groupedColumnName: when multiple columns are provided this column will be the concatenation of them (seperated by ", ")
-    // groupOrder: A list of which traces should come first in the data group order
-    //      ie. if groupByColumns=["channel_cut"] you could use groupOrder=["B&M of B&M"] to show B&M data first
-    var newData = data;
-    // Add a concatenated column based on the seperationColumns
-    newData[groupedColumnName] = newData[Object.keys(data)[0]].map(
-        (dataPoint, dataPointIndex) => {
-            // Concatenate each seperation column into one master primary key for seperation
-            var seperationColumnValue = '';
-            groupByColumns.map((seperationColumn) => {
-                seperationColumnValue += ', ' + data[seperationColumn][dataPointIndex];
-            });
-            if (seperationColumnValue.length > 2) {
-                seperationColumnValue = seperationColumnValue.substring(2);
-            }
-            return(seperationColumnValue);
+            resultObj = Array.isArray(objectToBeCloned) ? [] : {};
         }
+    }
+
+    for (key in objectToBeCloned) {
+        value = objectToBeCloned[key];
+
+        // Recursively copy for nested objects & arrays
+        resultObj[key] = deepCopy(value);
+    }
+
+    return resultObj;
+}
+/****************************End Utility Functions****************************/
+
+
+/*****************************Selecting Functions*****************************/
+
+/**
+ * Selects either raw_data or formatted_data for indicated columns.
+ * @param {object} data Raw YF data object in the form of {col_name: {raw_data: [, ...], formatted_data: [, ...]}, ...}.
+ * @param {Array} columns Names of columns to extract.
+ * @param {Boolean} selectRawData Extract raw_data if True else extract formatted_data.
+ * @param {Function} keyMapFn Used to generate the new column name. 
+ * @returns {object} New Object in the form of {col_name: [, ...], ...}
+ */
+function selectDataByVersion(data, columns, selectRawData, keyMapFn) {
+    let newData = {};
+    columns.forEach((key, _) => {
+        newKey = typeof (keyMapFn) === 'function' ? keyMapFn(key) : key;
+        newData[newKey] = selectRawData ? data[key].raw_data : data[key].formatted_data;
+    });
+    return newData;
+}
+
+/**
+ * Selects formatted_data for indicated columns.
+ * @param {object} data Raw YF data object in the form of {col_name: {raw_data: [, ...], formatted_data: [, ...]}, ...}.
+ * @param {Array} columns Names of columns to extract.
+ * @param {Function} keyMapFn Used to generate the new column name. 
+ * @returns {object} New Object in the form of {col_name: [, ...], ...}
+ */
+function getFormattedData(data, columns, keyMapFn) {
+    return selectDataByVersion(data, columns, false, keyMapFn);
+}
+
+/**
+ * Selects raw_data for indicated columns.
+ * @param {object} data Raw YF data object in the form of {col_name: {raw_data: [, ...], formatted_data: [, ...]}, ...}.
+ * @param {Array} columns Names of columns to extract.
+ * @param {Function} keyMapFn Used to generate the new column name. 
+ * @returns {object} New Object in the form of {col_name: [, ...], ...}
+ */
+function getUnformattedData(data, columns, keyMapFn) {
+    return selectDataByVersion(data, columns, true, keyMapFn);
+}
+
+/**
+ * Selects data for indicated columns and convert data points to Date objects.
+ * @param {object} data Raw YF data object in the form of {col_name: {raw_data: [, ...], formatted_data: [, ...]}, ...}.
+ * @param {Array} columns Names of columns to extract.
+ * @param {Function} keyMapFn Used to generate the new column name. 
+ * @returns {object} New Object in the form of {col_name: [Date(), ...], ...}
+ */
+function getDateData(data, columns, keyMapFn) {
+    let buffer = getUnformattedData(data, columns, keyMapFn);
+    for (k in buffer) {
+        buffer[k] = buffer[k].map(
+            dateStr => new Date(
+                // ? forcing timezone conversion
+                new Date(dateStr).toLocaleString('en-US', { timeZone: "Europe/London" })
+            )
+        );
+    }
+    return buffer;
+}
+
+
+/**
+ * Selects data for indicated columns and convert data points to Date objects.
+ * 
+ * Note that there is no interface to change the column name in this function.
+ * @param {object} data Raw YF data object in the form of {col_name: {raw_data: [, ...], formatted_data: [, ...]}, ...}.
+ * @param 
+ * @returns {object} 
+ */
+function selectDataWithVersionSpecObject(
+    data,
+    { columnsOfFormatted = [], columnsOfUnformatted = [], columnsOfDate = [], } = {},
+) {
+    let fd = getFormattedData(data, columnsOfFormatted);
+    let ud = getUnformattedData(data, columnsOfUnformatted);
+    let dd = getDateData(data, columnsOfDate);
+    return { ...fd, ...ud, ...dd }
+}
+/***************************End Selecting Functions***************************/
+
+
+/*****************************Filtering Functions*****************************/
+
+/**
+ * Selects rows of data using pass-in index.
+ * @param {object} data An object of arrays, i.e. {col_name: [, ...], ...}
+ * @param {Array} index Row index to select.
+ * @returns {object} New object containing only the indicated rows.
+ */
+function selectRowByIndex(data, index) {
+    let newData = {}
+    for (const [columnName, column] of Object.entries(data)) {
+        newData[columnName] = column.filter((_, i) => index.includes(i));
+    }
+    return newData;
+}
+
+/**
+ * Gets the row index by matching values of a column to a list of lookup values.
+ * @param {object} data An object of arrays, i.e. {col_name: [, ...], ...}
+ * @param {String} column Name of column to check.
+ * @param {Array} lookupValues Array of values to match with.
+ * @returns {Array} Row index of matching values.
+ */
+function matchByValues(data, column, lookupValues) {
+    let index = [];
+    data[column].forEach((e, i) => {
+        if (lookupValues.includes(e)) {
+            index.push(i);
+        }
+    })
+    return index;
+}
+
+/**
+ * Selects rows of data by matching values of a column to a list of lookup values.
+ * @param {object} data An object of arrays, i.e. {col_name: [, ...], ...}
+ * @param {String} column Name of column to check.
+ * @param {Array} lookupValues Array of values to match with.
+ * @returns {object} New object containing only the indicated rows.
+ */
+function selectRowMatchByValues(data, column, lookupValues) {
+    return selectRowByIndex(data, matchByValues(data, column, lookupValues));
+}
+
+/**
+ * Gets the row index using a predicating function.
+ * @param {object} data An object of arrays, i.e. {col_name: [, ...], ...}
+ * @param {String} column Name of column to check.
+ * @param {Function} filterFunc Predicates whether a row should be kept.
+ * @returns {Array} Row index of rows that meet the predicate.
+ */
+function filterByColumn(data, column, filterFunc) {
+    let index = [];
+    data[column].forEach((e, i) => {
+        if (filterFunc(e)) {
+            index.push(i);
+        }
+    })
+    return index;
+}
+
+/**
+ * Selects rows of data using a predicating function.
+ * @param {object} data An object of arrays, i.e. {col_name: [, ...], ...}
+ * @param {String} column Name of column to check.
+ * @param {Function} filterFunc Predicates whether a row should be kept.
+ * @returns {object} New object containing only the rows that meet the predicate.
+ */
+function selectRowFilterByColumn(data, column, filterFunc) {
+    return selectRowByIndex(data, filterByColumn(data, column, filterFunc));
+}
+
+
+/**
+ * TODO
+ * @param {any} data
+ * @param {any} unformattedMonthList
+ * @param {Number} numberOfMonthsInQuarter
+ * @returns {any}
+ */
+function getQuarterlyData(data, unformattedMonthList, numberOfMonthsInQuarter = 3) {
+    const monthRemainder = new Date(Math.max.apply(null, unformattedMonthList)).getMonth() % numberOfMonthsInQuarter;
+    let index = [];
+    unformattedMonthList.forEach((e, i) => {
+        if ((e.getMonth() % numberOfMonthsInQuarter) == monthRemainder) {
+            index.push(i);
+        }
+    });
+    return selectRowByIndex(data, index);
+}
+/***************************End Filtering Functions***************************/
+
+
+/*****************************Mutating Functions******************************/
+
+function recodeColumn(data, column, map) {
+    // TODO
+
+}
+
+
+
+/***************************End Mutating Functions****************************/
+
+
+/*****************************Reshaping Functions*****************************/
+/**
+ * Seperates the data into data groups so that they are easier to turn into individual lines/traces.
+ * @param {object} data
+ * @param {Array} groupByColumns Used as the keys for creating the groups, default [].
+ *      e.g. if you use "month" here each group will be a different month
+ * @param {String} groupedColumnName Used as name for the new group key column, default "grouped_column".
+ * @param {Array} groupOrder Indicates which traces should come first in the data group order, default [].
+ *      e.g. if groupByColumns=["channel_cut"] you could use groupOrder=["B&M of B&M"] to show B&M data first.
+ * @returns {Array[object]}
+ */
+function seperateDataIntoGroups(data, { groupByColumns = [], groupedColumnName = "grouped_column", groupOrder = [] } = {}) {
+    let intermData = deepCopy(data); // Make a deep copy so that don't modify in-place
+    let firstCol = intermData[Object.keys(intermData)[0]];
+    // Add a concatenated column based on the seperationColumns
+    intermData[groupedColumnName] = firstCol.map(
+        // Concatenate each seperation column into one master primary key for seperation
+        (_, i) => groupByColumns.map((key) => intermData[key][i]).join(', ')
     );
 
     // Get distinct groups from the seperation column
-    var distinctSeperationGroups = [... new Set(newData[groupedColumnName])].filter(group => group != ', ');
+    let distinctGroups = [... new Set(intermData[groupedColumnName])]
     // Order groups if custom sort order was included
-    var customOrderItems = groupOrder.filter(item => distinctSeperationGroups.includes(item));
-    distinctSeperationGroups = customOrderItems.concat(distinctSeperationGroups.filter(item => !customOrderItems.includes(item)));
-    var finalData = [];
-    distinctSeperationGroups.map(
-        (seperationGroup, seperationGroupIndex) => {
-            STEP_group_indexes = [];
-            newData[groupedColumnName].map((dataPoint, dataPointIndex) => {
-                if (dataPoint == seperationGroup) {
-                    STEP_group_indexes.push(dataPointIndex);
-                }
-            });
-            seperatedData = {};
-            for (const [columnName, columnValues] of Object.entries(newData)) {
-                var columnValuesInGroup = STEP_group_indexes.map(index => columnValues[index]);
-                seperatedData[columnName] = columnValuesInGroup;
-            }
-            finalData.push({});
-            finalData[seperationGroupIndex] = seperatedData;
-        }
-    );
-    
-    return finalData;
-}
+    distinctGroups = [
+        ...groupOrder.filter(item => distinctGroups.includes(item)),
+        ...distinctGroups.filter(item => !groupOrder.includes(item))
+    ]
 
-filterByColumn = function(data, columnName, filteringFunction) {
-    // Filters all columns of the data row-wise
-    //
-    // columnName: this is the column that the filtering will be based off of
-    // filteringFunction: A function that takes each entry in the columnName column and returns true when 
-    //      the column should be kept
-    
-    rowsToBeKept = data[columnName].map((rowValue, rowIndex) => {
-        return(filteringFunction(rowValue, rowIndex)) 
-    })
-    
-    newData = {}
-    for (const [columnName, column] of Object.entries(data)) {
-        newData[columnName] = column.filter((row, rowIndex) => { return(rowsToBeKept[rowIndex]) })
-    }
-    
-    return(newData)
+    // Convert the data into groups
+    return distinctGroups.map(
+        group => selectRowMatchByValues(intermData, groupedColumnName, [group])
+    );
 }
+/***************************End Reshaping Functions***************************/
+
