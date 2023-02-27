@@ -46,7 +46,11 @@ function selectDataByVersion(data, columns, selectRawData, keyMapFn) {
     let newData = {};
     columns.forEach((key, _) => {
         newKey = typeof (keyMapFn) === 'function' ? keyMapFn(key) : key;
-        newData[newKey] = selectRawData ? data[key].raw_data : data[key].formatted_data;
+        
+        newData[newKey] = []
+        data[key].map((rowItem) => {
+            newData[newKey].push(selectRawData ? rowItem.raw_data : rowItem.formatted_data);
+        })
     });
     return newData;
 }
