@@ -2,7 +2,7 @@
 A public repo of charting functions that can be used across YF and our web apps to make data processing and charting in JavaScript easier.
 
 
-# Example of how this library can make YF data processing easier:
+# Example of how to access this libarary:
 
         //generateChart is a required function which will be called to generate your Javascript chart
         generateChart = function(options) {
@@ -35,23 +35,6 @@ A public repo of charting functions that can be used across YF and our web apps 
             var unformattedData = getUnformattedData(dataset, Object.keys(dataset));
             var formattedData = getFormattedData(dataset, Object.keys(dataset));
 
-            console.log(formattedData);
-
-            // Seperating each channel cut into seperate traces
-            var unformattedDataGrouped = seperateDataIntoGroups(unformattedData, {
-                groupByColumns: inputs.groupByColumns,
-                groupedColumnName: inputs.groupedColumnName,
-                groupOrder: inputs.groupOrder
-            });
-            var formattedDataGrouped = seperateDataIntoGroups(formattedData, {
-                groupByColumns: inputs.groupByColumns,
-                groupedColumnName: inputs.groupedColumnName,
-                groupOrder: inputs.groupOrder
-            });
-
-
-            unformattedData = unformattedDataGrouped;
-            formattedData = formattedDataGrouped;
 
             return([unformattedData, formattedData]);
 
