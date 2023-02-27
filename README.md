@@ -32,7 +32,7 @@ A public repo of charting functions that can be used across YF and our web apps 
 
         processData = function(dataset, doDrawingCallback) {
             
-            require(['https://cdn.jsdelivr.net/gh/Fusion-Tools/yellowfin_charting@main/fusionCharting.js'], function(fusionCharting) {
+            require(['https://cdn.jsdelivr.net/gh/Fusion-Tools/yellowfin_charting@latest/fusionCharting.js'], function(fusionCharting) {
 
             // Data is in the dataset in a column based format, where each column has an array of data
                 // eg. dataset.column_name[0].raw_data, dataset.column_name[0].formatted_data
