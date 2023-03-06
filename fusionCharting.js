@@ -1,5 +1,5 @@
 define(function() {
-
+    
     /*******************************Utility Functions*******************************/
 
     /**
@@ -260,4 +260,20 @@ define(function() {
     }
     /***************************End Reshaping Functions***************************/
 
+    return({
+        deepCopy,
+        selectDataByVersion,
+        getFormattedData,
+        getUnformattedData,
+        getDateData,
+        selectDataWithVersionSpecObject,
+        selectRowByIndex,
+        matchByValues,
+        selectRowMatchByValues,
+        filterByColumn,
+        selectRowFilterByColumn,
+        getQuarterlyData,
+        recodeColumn,
+        seperateDataIntoGroups
+    });
 });
