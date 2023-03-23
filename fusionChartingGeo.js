@@ -3,7 +3,7 @@ define(function() {
     /*******************************Mapping Functions*******************************/
 
     /**
-     * Creates a chloropleth map based on the fusion 9 regions.
+     * Creates a choropleth map based on the fusion 9 regions.
      * @param {string} parentContainerId The ID of the div you want to be the parent of the map.
      *      The map will be inserted as the last child of this div
      * @param {int} width Width of the map in px (has been tested for 760)
@@ -16,7 +16,7 @@ define(function() {
      * 
      * THIS FUNCTION MUST BE USED FROM WITHIN YELLOWFIN
      */
-    function createChloroplethMap(parentContainerId, width, height, title, color) {
+    function createChoroplethMap(parentContainerId, width, height, title, color) {
             
         // Generate random id
         var containerId = "fusion-map-container-" + Math.floor(Math.random() * 9999999999)
@@ -182,6 +182,6 @@ define(function() {
 
 
     return({
-        createChloroplethMap
+        createChoroplethMap
     });
 });
