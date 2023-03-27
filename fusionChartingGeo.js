@@ -112,7 +112,7 @@ define(function() {
             
                 }
                 
-                function addDemoCutText(container, title, text, top, left, regionTop, regionLeft, lineOrientation, svgContainer, width=25, height=25, drawLine=true, textSizeMultiplier=1) {
+                function addDemoCutText(container, title, text, top, left, regionTop, regionLeft, lineOrientation, svgContainer, width=15, height=15, drawLine=true, textSizeMultiplier=1) {
                     container.insertAdjacentHTML( 'beforeend', `
                         <div
                             style="
@@ -166,8 +166,8 @@ define(function() {
                         demoCutAbsolutePositions[demoCut].regionLeft,
                         demoCutAbsolutePositions[demoCut].lineOrientation,
                         this.svgContainer,
-                        25,
-                        25,
+                        15,
+                        15,
                         drawLine,
                         textSizeMultiplier,
                     )
