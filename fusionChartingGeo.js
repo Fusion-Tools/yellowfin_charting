@@ -123,7 +123,7 @@ define(function() {
                                 height: ` + height + `%;
                             "
                         >
-                            <h3 style="border-left: 4px solid ` + color + `; padding-left: 5px; font-size: ` + (18*textSizeMultiplier) + `px;">
+                            <h3 style="border-left: 4px solid ` + color + `; padding-left: 5px; background: white; font-size: ` + (18*textSizeMultiplier) + `px;">
                                 ` + title + `<br />
                                 <span style="font-size: ` + (14*textSizeMultiplier) + `px;">` + text +`</span>
                             </h3>
