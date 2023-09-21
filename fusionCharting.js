@@ -288,6 +288,7 @@ define(function() {
                     style="
                         position: absolute;
                         opacity: 0;
+                        display: none;
                         width: ` + popupWidth + `px;
                         height: ` + popupHeight + `px;
                         overflow-x: hidden;
@@ -320,6 +321,7 @@ define(function() {
                 
                 // Display the popup and move it into position
                 glossaryPopup.style.opacity = "1";
+                glossaryPopup.style.display: "";
                 glossaryPopup.style.left = x + "px";
                 glossaryPopup.style.top = y + "px";
                 
@@ -330,6 +332,7 @@ define(function() {
             // Add an event to make the popup disappear when the mouse is moved away
             anchorTag.addEventListener("mouseout", (event) => {
                 document.getElementById(glossaryId).style.opacity = "0";
+                document.getElementById(glossaryId).style.display: "none";
                 var glossaryPopup = document.getElementById(glossaryId);
                 glossaryPopup.src = "https://en.wikipedia.org/wiki/Database";
             });
