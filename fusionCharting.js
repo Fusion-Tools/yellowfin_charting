@@ -266,21 +266,21 @@ define(function() {
     /**
      * Adds a hover popup to all anchor tags in the specified div. An iframe will be created as
      *      child of the document body to hold the popup.
-     * @param {string} divId The ancestor div of all the target links.
+     * @param {int} width The popup width
+     * @param {int} height The popup height
+     * @param {int} borderColor The border color
      * @returns {none} 
      * 
      */
 
-    function addHoverPopupToLinks(divId, options = {width: 600, height: 160, borderColor: "var(--primary-color)"}) {
-    
-        var popupWidth = options.width;
-        var popupHeight = options.height;
+    function createGlossaryPopup(width=600, height=180, borderColor="var(--primary-color)") {
+            
+        var popupWidth = width;
+        var popupHeight = height;
         
         var glossaryId = "fusion-glossary-popup";
-        var chart = document.getElementById(divId);
         
-        // If popup doesn't already exist on the page add to the end of the HTML body
-        if(!document.getElementById(glossaryId)) {
+        function initializeGlossaryPopup() {
             document.body.insertAdjacentHTML( 'beforeend', `
                 <iframe 
                     class="fusion-glossary-popup" id="` + glossaryId + `"
@@ -288,11 +288,12 @@ define(function() {
                     style="
                         position: absolute;
                         opacity: 0;
+                        display: none;
                         width: ` + popupWidth + `px;
                         height: ` + popupHeight + `px;
                         overflow-x: hidden;
                         overflow-y: hidden;
-                        border: 1px solid ` + options.borderColor + `;
+                        border: 1px solid ` + borderColor + `;
                         border-radius: 5px;
                         transition: opacity 0.2s;
                         z-index: 999999;
@@ -300,41 +301,84 @@ define(function() {
                 ></iframe>
                 ` );
         }
-        // Get all <a> tags that are descendants of chart
-        var anchorTags = [...chart.getElementsByTagName("a")];
         
-        anchorTags.map((anchorTag) => {
+        function showGlossaryPopup(event, anchorTag) {
+            var glossaryPopup = document.getElementById(glossaryId);
+            var glossaryPopupParentTransform = glossaryPopup.parentElement.getBoundingClientRect();
+            
+            // Set the popups iframe to point towards the link's urls
+            var href = anchorTag.href
+            if(typeof anchorTag.href === "object") {
+                href = anchorTag.href.baseVal
+            }
+            glossaryPopup.src = href;
+            
+            // Get the cursor's X and Y relative to the page
+            var x = event.pageX - glossaryPopupParentTransform.left + 5;
+            var y = event.pageY - glossaryPopupParentTransform.top + 5;
+            
+            // Display the popup and move it into position
+            glossaryPopup.style.opacity = "1";
+            glossaryPopup.style.display = "";
+            glossaryPopup.style.left = x + "px";
+            glossaryPopup.style.top = y + "px";
+            
+            // Set popup iframe url again (this seems to fix a bug where the url does not update the first time)
+            glossaryPopup.src = href;
+        }
+        
+        function hideGlossaryPopup(event) {
+            document.getElementById(glossaryId).style.opacity = "0";
+                document.getElementById(glossaryId).style.display = "none";
+                var glossaryPopup = document.getElementById(glossaryId);
+                glossaryPopup.src = "";
+        }
+        
+        function addHoverEventsToLink(oldAanchorTag) {
+            
+            var anchorTag = oldAanchorTag.cloneNode(true)
+            oldAanchorTag.replaceWith(anchorTag);
             
             // Add an event to make the popup appear when the link is hovered over
-            anchorTag.addEventListener("mouseover", (event) => {
-                
-                var glossaryPopup = document.getElementById(glossaryId);
-                var glossaryPopupParentTransform = glossaryPopup.parentElement.getBoundingClientRect();
-                
-                // Set the popups iframe to point towards the link's urls
-                glossaryPopup.src = anchorTag.href.baseVal;
-                
-                // Get the cursor's X and Y relative to the page
-                var x = event.pageX - glossaryPopupParentTransform.left + 5;
-                var y = event.pageY - glossaryPopupParentTransform.top + 5;
-                
-                // Display the popup and move it into position
-                glossaryPopup.style.opacity = "1";
-                glossaryPopup.style.left = x + "px";
-                glossaryPopup.style.top = y + "px";
-                
-                // Set popup iframe url again (this seems to fix a bug where the url does not update the first time)
-                glossaryPopup.src = anchorTag.href.baseVal;
-            });
+            anchorTag.addEventListener("mouseover", (event) => {showGlossaryPopup(event, anchorTag)});
 
             // Add an event to make the popup disappear when the mouse is moved away
-            anchorTag.addEventListener("mouseout", (event) => {
-                document.getElementById(glossaryId).style.opacity = "0";
-                var glossaryPopup = document.getElementById(glossaryId);
-                glossaryPopup.src = "https://en.wikipedia.org/wiki/Database";
+            anchorTag.addEventListener("mouseout", hideGlossaryPopup);
+            
+            anchorTag.setAttribute("glossaryPopup", true)
+        }
+        
+        // If popup doesn't already exist on the page add to the end of the HTML body
+        if(!document.getElementById(glossaryId)) {
+            initializeGlossaryPopup();
+        }
+        
+        var currentSubTabId = document.getElementsByClassName("activeSubTab")[0].id;
+        
+        function addHoverEventToAllCharts() {
+            var charts = [...document.getElementsByClassName("rptChartContainer")];
+            
+            charts.map((chart) => {
+                // Get all <a> tags that are descendants of chart
+                var anchorTags = [...chart.getElementsByTagName("a")];
+                
+                anchorTags.map((anchorTag) => {
+                    var href = anchorTag.href
+                    if(typeof anchorTag.href === "object") {
+                        href = anchorTag.href.baseVal
+                    }
+                    if(href.includes("glossary.fusionanalyticsdatahub.com") && !anchorTag.getAttribute("glossaryPopup")) {
+                        addHoverEventsToLink(anchorTag);
+                    }
+                });
             });
             
-        })
+            if(typeof currentSubTabId !== 'undefined' && document.getElementsByClassName("activeSubTab")[0].id === currentSubTabId) {
+                setTimeout(addHoverEventToAllCharts, 3500)
+            }
+        }
+        addHoverEventToAllCharts();
+            
     }
     /****************************End Hover Popup Functions****************************/
 
@@ -353,6 +397,6 @@ define(function() {
         getQuarterlyData,
         recodeColumn,
         seperateDataIntoGroups,
-        addHoverPopupToLinks
+        createGlossaryPopup
     });
 });
