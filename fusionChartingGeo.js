@@ -16,7 +16,7 @@ define(function() {
      * 
      * THIS FUNCTION MUST BE USED FROM WITHIN YELLOWFIN
      */
-    function createChoroplethMap(parentContainerId, width, height, title, color) {
+        function createChoroplethMap(parentContainerId, width, height, title, color) {
             
         // Generate random id
         var containerId = "fusion-map-container-" + Math.floor(Math.random() * 9999999999)
@@ -37,7 +37,8 @@ define(function() {
                 <h2 style="position: absolute;
                     margin: 0;
                     font-family: Arial, Tahoma, Helvetica, Geneva, sans-serif;
-                    font-size: 24px;">` + title + `
+                    font-size: 24px;
+                    z-index: 99">` + title + `
                 </h2>
                 <svg id="` + containerId + `-svg" width=100% height=100%></svg>
             </div>
@@ -72,23 +73,23 @@ define(function() {
                  */
 
                 var demoCutAbsolutePositions = {
-                    "Canada": {top: 15, left: 70, regionTop: 12, regionLeft: 50, lineOrientation: "right"},
-                    "Vancouver": {top: 65, left: 0, regionTop: 59, regionLeft: 15, lineOrientation: "right"},
-                    "Rest of British Columbia": {top: 80, left: 7, regionTop: 61, regionLeft: 20, lineOrientation: "right"},
-                    "Alberta": {top: 65, left: 22, regionTop: 62, regionLeft: 25, lineOrientation: "left"},
-                    "Saskatchewan / Manitoba": {top: 80, left: 30, regionTop: 64, regionLeft: 38, lineOrientation: "right"},
-                    "Rest of Ontario": {top: 65, left: 40, regionTop: 64, regionLeft: 53, lineOrientation: "right"},
-                    "Toronto": {top: 80, left: 53, regionTop: 68, regionLeft: 64.5, lineOrientation: "right"},
-                    "Rest of Quebec": {top: 65, left: 77, regionTop: 63, regionLeft: 72, lineOrientation: "left"},
-                    "Montreal": {top: 80, left: 72, regionTop: 64.5, regionLeft: 69, lineOrientation: "left"},
-                    "Atlantic": {top: 50, left: 84, regionTop: 50, regionLeft: 88, lineOrientation: "left"},
-                    "West": {top: 65, left: 20, regionTop: 62, regionLeft: 25, lineOrientation: "left"},
-                    "Ontario": {top: 80, left: 55, regionTop: 68, regionLeft: 64.5, lineOrientation: "right"},
-                    "Quebec": {top: 65, left: 77, regionTop: 63, regionLeft: 72, lineOrientation: "left"},
-                    "ENG Canada": {top: 65, left: 40, regionTop: 64, regionLeft: 53, lineOrientation: "right"},
-                    "British Columbia": {top: 80, left: 7, regionTop: 61, regionLeft: 18, lineOrientation: "right"},
-                    "Prairies": {top: 80, left: 30, regionTop: 64, regionLeft: 37, lineOrientation: "right"},
-                    "West + Ontario": {top: 65, left: 40, regionTop: 64, regionLeft: 53, lineOrientation: "right"},
+                    "Canada": {top: 18, left: 70, regionTop: 15, regionLeft: 50, lineOrientation: "right"},
+                    "Vancouver": {top: 68, left: 0, regionTop: 62, regionLeft: 15, lineOrientation: "right"},
+                    "Rest of British Columbia": {top: 83, left: 7, regionTop: 64, regionLeft: 20, lineOrientation: "right"},
+                    "Alberta": {top: 68, left: 22, regionTop: 65, regionLeft: 25, lineOrientation: "left"},
+                    "Saskatchewan / Manitoba": {top: 83, left: 30, regionTop: 67, regionLeft: 38, lineOrientation: "right"},
+                    "Rest of Ontario": {top: 68, left: 40, regionTop: 67, regionLeft: 53, lineOrientation: "right"},
+                    "Toronto": {top: 83, left: 53, regionTop: 71, regionLeft: 64.5, lineOrientation: "right"},
+                    "Rest of Quebec": {top: 68, left: 77, regionTop: 66, regionLeft: 72, lineOrientation: "left"},
+                    "Montreal": {top: 83, left: 72, regionTop: 67.5, regionLeft: 69, lineOrientation: "left"},
+                    "Atlantic": {top: 56, left: 84, regionTop: 56, regionLeft: 88, lineOrientation: "left"},
+                    "West": {top: 68, left: 20, regionTop: 65, regionLeft: 25, lineOrientation: "left"},
+                    "Ontario": {top: 83, left: 55, regionTop: 71, regionLeft: 64.5, lineOrientation: "right"},
+                    "Quebec": {top: 68, left: 77, regionTop: 66, regionLeft: 72, lineOrientation: "left"},
+                    "ENG Canada": {top: 68, left: 40, regionTop: 67, regionLeft: 53, lineOrientation: "right"},
+                    "British Columbia": {top: 83, left: 7, regionTop: 64, regionLeft: 18, lineOrientation: "right"},
+                    "Prairies": {top: 83, left: 30, regionTop: 67, regionLeft: 37, lineOrientation: "right"},
+                    "West + Ontario": {top: 68, left: 40, regionTop: 67, regionLeft: 53, lineOrientation: "right"},
                 }
                 
                 function addDemoCutLine(svgContainer, textTop, textLeft, regionTop, regionLeft, lineOrientation) {
@@ -135,13 +136,12 @@ define(function() {
                 var demoCutString = demoCut.replace(/ /g, "").replace(/\//g, "");
                 var imageUrl = "./customimages/fusionIcons/RegionalDemoCutIcons/" + demoCutString + "Icon.png";
                 
-                // TODO: Adding a Demo Cut
                 this.container.insertAdjacentHTML( 'beforeend', `
                     <div 
                         style="
                             position: absolute;
                             left: 4%;
-                            top: -5%;
+                            top: -3%;
                             width: 88%;
                             height: 88%;
                             background-color: ` + color + `;
