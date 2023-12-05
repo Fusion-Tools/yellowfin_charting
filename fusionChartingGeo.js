@@ -1,4 +1,5 @@
-define(["./fusionChartingImages"], function (fusionChartingImages) {
+define(["require", "./fusionChartingImages"], function (require) {
+    var fusionChartingImages = require("./fusionChartingImages");
 
     /*******************************Mapping Functions*******************************/
 
