@@ -1,5 +1,12 @@
-define(["require", "./fusionChartingImages.js"], function (require) {
-    var fusionChartingImages = require("./fusionChartingImages.js");
+var libraries = {
+    "fusionChartingImages": "./fusionChartingImages.js?bust=" + (new Date()).getTime(),
+}
+
+requirejs.config({
+    paths: libraries
+});
+
+define([libraries.fusionChartingImages], function (fusionChartingImages) {
 
     /*******************************Mapping Functions*******************************/
 
