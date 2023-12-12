@@ -1,12 +1,4 @@
-var libraries = {
-    "fusionChartingImages": "./fusionChartingImages.js?bust=" + (new Date()).getTime(),
-}
-
-requirejs.config({
-    paths: libraries
-});
-
-define([libraries.fusionChartingImages], function (fusionChartingImages) {
+define(["https://cdn.jsdelivr.net/gh/Fusion-Tools/yellowfin_charting@main/fusionChartingImages.js?bust=0.1"], function (fusionChartingImages) {
 
     /*******************************Mapping Functions*******************************/
 
